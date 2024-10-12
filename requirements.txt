@@ -1,0 +1,4 @@
+paramiko 
+python-dotenv
+pytelegrambotapi
+psycopg2-binary
