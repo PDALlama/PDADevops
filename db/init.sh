@@ -19,7 +19,7 @@ cat >> /var/lib/postgresql/data/postgresql.conf <<EOF
 
 wal_level = replica
 archive_mode = on
-archive_command = 'cd .'
+archive_command = 'cp %p /oracle/pg_data/archive/%f'
 
 max_wal_senders = 10
 wal_log_hints = on
@@ -31,6 +31,10 @@ log_line_prefix = '%m [%p] %q%u@%d '
 log_replication_commands = on
 
 EOF
+
+mkdir -p /oracle/pg_data/archive
+chmod 0755 /oracle/pg_data/archive
+chown postgres:postgres /oracle/pg_data/archive
 
 set -e
 
@@ -57,7 +61,6 @@ VALUES ('test1@mail.ru'),
         ('test4@ya.ru');
 
 INSERT INTO phone_numbers(number)
-
 VALUES ('88005550000'),
         ('8-800-555-00-00'),
         ('8(800) 555 00 00'),
