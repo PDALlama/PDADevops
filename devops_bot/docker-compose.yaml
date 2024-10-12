@@ -1,0 +1,44 @@
+services:
+  db_image:
+    build: ./db
+    container_name: db_image
+    environment:
+      - POSTGRES_REPLICATION_USER=repl_user
+      - POSTGRES_REPLICATION_PASSWORD=1232343
+      - POSTGRES_DB=db_bot_tg
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1232343
+    networks:
+      bot_network:
+        ipv4_address: 172.20.0.21
+
+  db_repl_image:
+    build: ./db_repl
+    container_name: db_repl_image
+    environment:
+      - POSTGRES_MASTER_HOST=172.20.0.21
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1232343
+      - POSTGRES_REPL_USER=repl_user
+      - POSTGRES_REPL_PASSWORD=1232343
+    networks:
+      bot_network:
+        ipv4_address: 172.20.0.22
+    depends_on:
+      - db_image
+
+  bot_image:
+    build: ./bot
+    container_name: bot_image
+    networks:
+      bot_network:
+        ipv4_address: 172.20.0.23
+    depends_on:
+      - db_repl_image
+
+networks:
+  bot_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
