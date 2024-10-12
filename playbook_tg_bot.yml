@@ -166,7 +166,6 @@
       git:
         repo: "https://github.com/PDALlama/PDADevops.git"
         dest: "{{ bot_dir }}"
-        version: bot_for_ansible
         single_branch: yes
         version: tg_bot
 
