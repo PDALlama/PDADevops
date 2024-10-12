@@ -1,0 +1,191 @@
+- name: apt update && apt upgrade all vm
+  hosts: all
+  become: true
+  tasks:
+    - name: apt update && apt upgrade
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400
+
+- name: download postgresql to db and db_repl
+  hosts: db_servers
+  become: true
+  tasks:
+
+    - name: add apt repo key for postgesql
+      apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+    - name: add apt repo for postgresql
+      apt_repository:
+        repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+
+    - name: update apt cache
+      apt:
+        update_cache: yes
+
+    - name: install postgresql 12
+      apt:                   
+        name: 
+          - postgresql-12
+          - postgresql-contrib
+        state: present
+
+- name: configure and start db
+  hosts: db
+  become: true
+  vars:
+    pg_data_dir: "/etc/postgresql/12/main"
+  tasks:
+
+    - name: change postgresql.conf
+      lineinfile:
+        path: "{{ pg_data_dir }}/postgresql.conf"  # Путь к конфигурационному файлу PostgreSQL
+        regexp: '^#?{{ item.regexp }}'
+        line: '{{ item.line }}'
+      loop:
+        - { regexp: "listen_addresses =", line: "listen_addresses = '*'" }
+        - { regexp: "port =", line: "port = {{ hostvars[inventory_hostname]['DB_PORT'] }}" }
+        - { regexp: "wal_level =", line: "wal_level = replica" }
+        - { regexp: "archive_mode =", line: "archive_mode = on" }
+        - { regexp: "archive_command =", line: "archive_command = 'cp %p /oracle/pg_data/archive/%f'" }
+        - { regexp: "max_wal_senders =", line: "max_wal_senders = 10" }
+        - { regexp: "wal_log_hints =", line: "wal_log_hints = on" }
+        - { regexp: "logging_collector =", line: "logging_collector = on" }
+        - { regexp: "log_directory =", line: "log_directory = '/var/log/postgresql'" }
+        - { regexp: "log_filename =", line: "log_filename = 'postgresql.log'" }
+        - { regexp: "log_replication_commands =", line: "log_replication_commands = on" }
+
+    - name: change pg_hba.conf
+      blockinfile:
+        path: "{{ pg_data_dir }}/pg_hba.conf"
+        block: |
+          host {{ hostvars[inventory_hostname]['DB_DATABASE'] }} {{ hostvars[inventory_hostname]['DB_USER'] }} 0.0.0.0/24 trust
+          host replication {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} {{ hostvars[inventory_hostname]['DB_REPL_HOST'] }}/24 trust
+
+    - name: create archive dir
+      file:
+        path: /oracle/pg_data/archive/
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0755"
+        recurse: yes
+
+    - name: restart postgresql
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: postgresql
+
+    - name: change postgres password
+      postgresql_user:
+        name: postgres
+        password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
+        encrypted: yes
+
+    - name: create repl_user
+      postgresql_user:
+        name: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
+        password: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
+        role_attr_flags: REPLICATION,LOGIN
+        state: present
+
+    - name: create database
+      postgresql_db:
+        name: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
+        state: present
+ 
+    - name: Create table emails
+      postgresql_query:
+        db: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
+        query: "CREATE TABLE emails(ID SERIAL PRIMARY KEY, email VARCHAR (100) NOT NULL)" 
+
+    - name: Create table phone_numbers
+      postgresql_query:
+        db: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
+        query: "CREATE TABLE phone_numbers(ID SERIAL PRIMARY KEY, number VARCHAR (50) NOT NULL)"
+
+    - name: insert test emails
+      postgresql_query:
+        db: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
+        query: "INSERT INTO emails(email) VALUES ('test1@mail.ru'), ('test2@gmail.com'), ('test3@yandex.ru'), ('test4@ya.ru')"
+
+    - name: insert test phone numbers
+      postgresql_query:
+        db: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
+        query: "INSERT INTO phone_numbers(number) VALUES ('88005550000'), ('8-800-555-00-00'), ('8(800) 555 00 00'), ('+7(800)5550000');"
+
+- name: configure and start db_repl
+  hosts: db_repl
+  become: true
+  vars:
+    pg_data_dir: "/etc/postgresql/12/main"
+    pg_dir: "/var/lib/postgresql/12/main"
+  tasks:
+
+    - name: stop postgresql 
+      shell: service postgresql stop
+
+    
+    - name: clear postgresql dir
+      become_user: postgres
+      shell: rm -rf {{ pg_dir }}/*
+
+    - name: try to replicate
+      become_user: postgres
+      shell:  pg_basebackup -R -h {{ hostvars[inventory_hostname]['DB_HOST'] }} -p {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }} -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} -D /var/lib/postgresql/16/main/ -P
+      environment:
+        PGPASSWORD: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
+
+    - name: start postgresql
+      shell: service postgresql start
+
+- name: start bot 						# Название
+  hosts: bot 							# Какой хост
+  become: true 							# С правами root
+  vars:
+    bot_dir: "/tmp/tg_bot"
+  tasks: 							# Что будем делать
+
+    - name: download needed packages				# Название таска
+      apt:							# Устанавливем пакеты через apt
+        name:
+          - git
+          - python3
+          - python3-pip
+        state: present
+        update_cache: yes
+
+    - name: download python requirements 
+      pip:							# Юзаем pip
+        requirements: "{{ bot_dir }}/requirements.txt"		# Откуда брать список бибилиотек
+
+    - name: download bot
+      git:
+        repo: "https://github.com/PDALlama/PDADevops.git"
+        dest: "{{ bot_dir }}"
+        version: bot_for_ansible
+        single_branch: yes
+        version: tg_bot
+
+    - name: create .env file
+      copy:
+        dest: "{{ bot_dir }}/.env"
+        content: |
+          TOKEN={{ hostvars[inventory_hostname]['TOKEN'] }}
+          RM_HOST={{ hostvars[inventory_hostname]['RM_HOST'] }}
+          RM_PORT={{ hostvars[inventory_hostname]['RM_PORT'] }}
+          RM_USER={{ hostvars[inventory_hostname]['RM_USER'] }}
+          RM_PASSWORD={{ hostvars[inventory_hostname]['RM_PASSWORD'] }}
+          DB_HOST={{ hostvars[inventory_hostname]['DB_HOST'] }}
+          DB_PORT={{ hostvars[inventory_hostname]['DB_PORT'] }}
+          DB_USER={{ hostvars[inventory_hostname]['DB_USER'] }}
+          DB_PASSWORD={{ hostvars[inventory_hostname]['DB_PASSWORD'] }}
+          DB_DATABASE={{ hostvars[inventory_hostname]['DB_DATABASE'] }}
+          DB_REPL_HOST={{ hostvars[inventory_hostname]['DB_REPL_HOST'] }}
+          DB_REPL_PORT={{ hostvars[inventory_hostname]['DB_REPL_PORT'] }}
+
+    - name: start bot in bg with nohup
+      shell: "nohup python3 {{ bot_dir }}/bot.py > /dev/null 2>&1 &"
