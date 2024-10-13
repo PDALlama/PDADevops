@@ -79,20 +79,26 @@
       file:
         path: /oracle/pg_data/archive/
         state: directory
-        owner: postgres
-        group: postgres
+        owner: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
+        group: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
         mode: "0755"
         recurse: yes
+
+    - name: change postgres machine password
+      user:
+        name: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
+        password: "{{ {{ hostvars[inventory_hostname]['DB_PASSWORD'] }} | password_hash('sha512') }}"
 
     - name: restart postgresql
       systemd:
         state: restarted
+        daemon_reload: yes
         name: postgresql
     
 - name: configure postgresql 2
   hosts: db
   become: true
-  become_user: postgres
+  become_user: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
   tasks:
 
     - name: create database
@@ -120,9 +126,9 @@
         db: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
         query: "INSERT INTO phone_numbers(number) VALUES ('88005550000'), ('8-800-555-00-00'), ('8(800) 555 00 00'), ('+7(800)5550000');"
 
-    - name: change postgres password
+    - name: change postgres db password
       postgresql_user:
-        name: postgres
+        name: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
         password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
         encrypted: yes
 
