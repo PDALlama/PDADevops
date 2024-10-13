@@ -246,4 +246,5 @@
           DB_REPL_PORT = {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }}
 
     - name: start bot in bg with nohup
+ #     become_user: root
       shell: "nohup sudo python3 {{ bot_dir }}/bot.py > /dev/null 2>&1 &"
