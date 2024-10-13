@@ -85,13 +85,10 @@
         mode: "0755"
         recurse: yes
 
-    - name: Change password
-      expect:
-        command: passwd
-        responses:
-          "New password": "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
-          "Retype new password": "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
-      no_log: true
+    - name: change password
+      ansible.builtin.user:
+        name: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
+        password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
 
     - name: restart postgresql
       systemd:
