@@ -50,6 +50,12 @@
     pg_data_dir: "/etc/postgresql/12/main"
   tasks:
 
+    - name: install postgresql 12
+      apt:
+        name: 
+          - python3-passlib
+        state: present
+  
     - name: change postgresql.conf
       lineinfile:
         path: "{{ pg_data_dir }}/postgresql.conf"
