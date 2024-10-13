@@ -156,8 +156,12 @@
       shell: service postgresql stop
     
     - name: clear postgresql dir
-      become_user: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
+      become_user: "root"
       shell: rm -rf {{ pg_dir }}/*
+
+    - name: checking if delete succesful
+      command: find {{ pg_dir }}/ -mindepth 1 -delete
+      become: true
 
     - name: try to replicate
       shell:  pg_basebackup -R -h {{ hostvars[inventory_hostname]['DB_HOST'] }} -p {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }} -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} -D {{ pg_dir }}/ -P
@@ -165,14 +169,24 @@
       environment:
         PGPASSWORD: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
 
+    - name: Set permissions for the replication directory
+      file:
+        path: /var/lib/postgresql/15/main/
+        owner: postgres
+        group: postgres
+        recurse: yes
+      become: true
+
     - name: change pg_hba.conf
       blockinfile:
         path: "{{ pg_data_dir }}/pg_hba.conf"
         block: |
           host {{ hostvars[inventory_hostname]['DB_DATABASE'] }} {{ hostvars[inventory_hostname]['DB_USER'] }} 0.0.0.0/0 trust
+      become: true
 
     - name: start postgresql
       shell: service postgresql start
+      become: true
 
 - name: start bot
   hosts: bot
