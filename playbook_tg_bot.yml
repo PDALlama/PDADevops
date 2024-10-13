@@ -1,13 +1,3 @@
-- name: apt update && apt upgrade all vm
-  hosts: all
-  become: true
-  tasks:
-    - name: apt update && apt upgrade
-      apt:
-        upgrade: yes
-        update_cache: yes
-        cache_valid_time: 86400
-
 - name: download postgresql to db and db_repl
   hosts: db_servers
   become: true
