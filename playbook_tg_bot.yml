@@ -85,8 +85,13 @@
         mode: "0755"
         recurse: yes
 
-    - name: change postgres system password
-      raw: echo -e "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}\n{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}" | passwd {{ hostvars[inventory_hostname]['DB_USER'] }}
+    - name: Change password
+      expect:
+        command: passwd
+        responses:
+          "New password": "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
+          "Retype new password": "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
+      no_log: true
 
     - name: restart postgresql
       systemd:
