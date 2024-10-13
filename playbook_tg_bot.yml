@@ -85,11 +85,6 @@
         mode: "0755"
         recurse: yes
 
-    - name: change password
-      ansible.builtin.user:
-        name: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
-        password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
-
     - name: restart postgresql
       systemd:
         state: restarted
