@@ -52,7 +52,7 @@
 
     - name: change postgresql.conf
       lineinfile:
-        path: "{{ pg_data_dir }}/postgresql.conf"  # Путь к конфигурационному файлу PostgreSQL
+        path: "{{ pg_data_dir }}/postgresql.conf"
         regexp: '^#?{{ item.regexp }}'
         line: '{{ item.line }}'
       loop:
@@ -157,22 +157,27 @@
     - name: start postgresql
       shell: service postgresql start
 
-- name: start bot 						# Название
-  hosts: bot 							# Какой хост
-  become: true 							# С правами root
+- name: start bot
+  hosts: bot
+  become: true
   vars:
     bot_dir: "/tmp/tg_bot"
-  tasks: 							# Что будем делать
+  tasks:
 
-    - name: download needed packages				# Название таска
-      apt:							# Устанавливем пакеты через apt
+    - name: download needed packages
+      apt:
         name:
           - git
-          - python3-paramiko
-          - python3-python-dotenv
-          - python3-pytelegrambotapi
+          - python3-pip
         state: present
         update_cache: yes
+
+    - name: download py requirements
+      pip:
+        name:
+          - paramiko
+          - python-dotenv
+          - pytelegrambotapi
 
     - name: download bot
       git:
