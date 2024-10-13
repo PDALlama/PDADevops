@@ -50,10 +50,10 @@
     pg_data_dir: "/etc/postgresql/12/main"
   tasks:
 
-    - name: install postgresql 12
+    - name: install passlib
       apt:
         name: 
-          - python3-passlib
+          - passlib
         state: present
   
     - name: change postgresql.conf
