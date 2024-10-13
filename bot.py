@@ -204,7 +204,7 @@ def get_repl_logs():
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(hostname=db_host, port=int(rm_port), username=db_user, password=db_password)
     stdin, stdout, stderr = client.exec_command(
-        'sudo cat /var/log/postgresql/postgresql.log | grep -i \"repl_user\" | tail -20')
+        'cat /var/log/postgresql/postgresql.log | grep -i \"repl_user\" | tail -20')
     # stdin, stdout, stderr = client.exec_command(
     #     'whoami')
     data = stdout.read() + stderr.read()
