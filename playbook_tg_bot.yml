@@ -94,7 +94,7 @@
     - name: change log_dir permissions
       file:
         path: "/var/log/postgresql/"
-        mode=u=rwX, g=rX, o=rX
+        mode: "0755"
         recurse: yes
       become: true
     
