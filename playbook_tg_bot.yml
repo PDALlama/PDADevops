@@ -91,6 +91,13 @@
         daemon_reload: yes
         name: postgresql
     
+    - name: change log_dir permissions
+      file:
+        path: "/var/log/postgresql/"
+        mode=u=rwX, g=rX, o=rX
+        recurse: yes
+      become: true
+    
 - name: configure postgresql 2
   hosts: db
   become: true
