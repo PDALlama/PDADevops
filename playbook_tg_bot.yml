@@ -148,13 +148,9 @@
         state: present
         update_cache: yes
 
-    - name: install python requirements
-      pip:
-        name:
-          - paramiko
-          - psycopg2-binary
-          - python-dotenv
-          - pytelegrambotapi
+    - name: download python requirements 
+      pip:							# Юзаем pip
+        requirements: "{{ bot_dir }}/requirements.txt"		# Откуда брать список бибилиотек
 
     - name: download bot
       git:
