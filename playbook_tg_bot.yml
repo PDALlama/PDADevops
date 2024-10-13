@@ -84,9 +84,9 @@
         group: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
         mode: "0755"
         recurse: yes
-        
+
     - name: change postgres system password
-      shell: "echo -e '{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}\n{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}' | passwd {{ hostvars[inventory_hostname]['DB_USER'] }}"
+      shell: "echo -e \"{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}\n{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}\" | passwd {{ hostvars[inventory_hostname]['DB_USER'] }}"
 
     - name: restart postgresql
       systemd:
