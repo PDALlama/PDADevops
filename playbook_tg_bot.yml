@@ -138,13 +138,11 @@
 - name: configure and start db_repl
   hosts: db_repl
   become: true
-  become_user: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
   vars:
     pg_data_dir: "/etc/postgresql/12/main"
     pg_dir: "/var/lib/postgresql/12/main"
   tasks:
 
-  
     - name: change postgresql.conf
       lineinfile:
         path: "{{ pg_data_dir }}/postgresql.conf"
@@ -163,7 +161,8 @@
 
     - name: try to replicate
       become_user: postgres
-      shell:  pg_basebackup -R -h {{ hostvars[inventory_hostname]['DB_HOST'] }} -p {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }} -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} -D /var/lib/postgresql/16/main/ -P
+      shell:  pg_basebackup -R -h {{ hostvars[inventory_hostname]['DB_HOST'] }} -p {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }} -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} -D {{ pg_dir }}/ -P
+      become_user: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
       environment:
         PGPASSWORD: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
 
