@@ -196,13 +196,13 @@ def get_services():
 
 
 def get_repl_logs():
-    global db_user
-    global db_password
+    global rm_user
+    global rm_password
     global rm_port
-    global db_host
+    global rm_host
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=db_host, port=int(rm_port), username=db_user, password=db_password)
+    client.connect(hostname=rm_host, port=int(rm_port), username=rm_user, password=rm_password)
     stdin, stdout, stderr = client.exec_command(
         'cat /var/log/postgresql/postgresql.log | grep -i \"repl_user\" | tail -20')
     # stdin, stdout, stderr = client.exec_command(
