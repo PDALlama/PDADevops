@@ -1,4 +1,4 @@
-- name: apt update && apt upgrade all vm
+- name: all vm actions
   hosts: all
   become: true
   tasks:
@@ -7,6 +7,13 @@
         upgrade: yes
         update_cache: yes
         cache_valid_time: 86400 
+    
+    - name: install needed packages
+      apt:
+        name:
+          - python3    
+          - python3-pip
+          - libpq-dev
 
 - name: download postgresql to db and db_repl
   hosts: db_servers
@@ -25,11 +32,16 @@
       apt:
         update_cache: yes
 
-    - name: install postgresql 12
+    - name: install postgresql 12 + python
       apt:
         name: 
           - postgresql-12
           - postgresql-contrib
+        state: present
+
+    - name: install psycopg2
+      pip:
+        name: psycopg2-binary
         state: present
 
 - name: configure and start db
@@ -153,9 +165,6 @@
       apt:							# Устанавливем пакеты через apt
         name:
           - git
-          - python3
-          - python3-pip
-          - libpq-dev
         state: present
         update_cache: yes
 
