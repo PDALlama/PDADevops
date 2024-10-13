@@ -85,12 +85,6 @@
         mode: "0755"
         recurse: yes
 
-    - name: restart postgresql
-      systemd:
-        state: restarted
-        daemon_reload: yes
-        name: postgresql
-
     - name: change postgres password
       postgresql_user:
         name: postgres
@@ -101,8 +95,14 @@
       postgresql_user:
         name: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
         password: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
-        role_attr_flags: REPLICATION,LOGIN
+        role_attr_flags: REPLICATION, LOGIN
         state: present
+
+    - name: restart postgresql
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: postgresql
 
     - name: create database
       postgresql_db:
