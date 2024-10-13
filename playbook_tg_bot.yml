@@ -16,7 +16,7 @@
         update_cache: yes
 
     - name: install postgresql 12
-      apt:                   
+      apt:
         name: 
           - postgresql-12
           - postgresql-contrib
