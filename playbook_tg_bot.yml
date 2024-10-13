@@ -169,7 +169,7 @@
       environment:
         PGPASSWORD: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
 
-    - name: change pg_der permissions
+    - name: change pg_dir permissions
       file:
         path: "{{ pg_dir }}/"
         owner: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
