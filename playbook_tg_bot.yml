@@ -50,11 +50,6 @@
     pg_data_dir: "/etc/postgresql/12/main"
   tasks:
 
-    - name: install passlib
-      apt:
-        name: 
-          - passlib
-        state: present
   
     - name: change postgresql.conf
       lineinfile:
@@ -90,10 +85,13 @@
         mode: "0755"
         recurse: yes
 
+    - name: install passlib
+      apt:
+        name: 
+          - passlib
+        state: present
     - name: change postgres system password
-      user:
-        name: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
-        password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] | password_hash('sha512') }}"
+      shell: "echo -e '{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}\n{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}' | passwd {{ hostvars[inventory_hostname]['DB_USER'] }}"
 
     - name: restart postgresql
       systemd:
