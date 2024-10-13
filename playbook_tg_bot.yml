@@ -87,7 +87,7 @@
     - name: change postgres system password
       user:
         name: "{{ hostvars[inventory_hostname]['DB_USER'] }}"
-        password: "{{ {{ hostvars[inventory_hostname]['DB_PASSWORD'] }} | password_hash('sha512') }}"
+        password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] | password_hash('sha512') }}"
 
     - name: restart postgresql
       systemd:
