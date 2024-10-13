@@ -85,24 +85,16 @@
         mode: "0755"
         recurse: yes
 
-    - name: change postgres password
-      postgresql_user:
-        name: postgres
-        password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
-        encrypted: yes
-
-    - name: create repl_user
-      postgresql_user:
-        name: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
-        password: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
-        role_attr_flags: REPLICATION, LOGIN
-        state: present
-
     - name: restart postgresql
       systemd:
         state: restarted
-        daemon_reload: yes
         name: postgresql
+    
+- name: configure postgresql
+  hosts: db
+  become: true
+  become_user: postgres
+  tasks:
 
     - name: create database
       postgresql_db:
@@ -128,6 +120,19 @@
       postgresql_query:
         db: "{{ hostvars[inventory_hostname]['DB_DATABASE'] }}"
         query: "INSERT INTO phone_numbers(number) VALUES ('88005550000'), ('8-800-555-00-00'), ('8(800) 555 00 00'), ('+7(800)5550000');"
+
+    - name: change postgres password
+      postgresql_user:
+        name: postgres
+        password: "{{ hostvars[inventory_hostname]['DB_PASSWORD'] }}"
+        encrypted: yes
+
+    - name: create repl_user
+      postgresql_user:
+        name: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
+        password: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
+        role_attr_flags: REPLICATION, LOGIN
+        state: present
 
 - name: configure and start db_repl
   hosts: db_repl
