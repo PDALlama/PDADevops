@@ -14,6 +14,11 @@
           - python3    
           - python3-pip
           - libpq-dev
+    
+    - name: install psycopg2
+      apt:
+        name:
+          - python3-psycopg2
 
 - name: download postgresql to db and db_repl
   hosts: db_servers
@@ -32,16 +37,11 @@
       apt:
         update_cache: yes
 
-    - name: install postgresql 12 + python
+    - name: install postgresql 12
       apt:
         name: 
           - postgresql-12
           - postgresql-contrib
-        state: present
-
-    - name: install psycopg2
-      pip:
-        name: psycopg2-binary
         state: present
 
 - name: configure and start db
