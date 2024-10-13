@@ -1,3 +1,13 @@
+- name: apt update && apt upgrade all vm
+  hosts: all
+  become: true
+  tasks:
+    - name: apt update && apt upgrade
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400 
+
 - name: download postgresql to db and db_repl
   hosts: db_servers
   become: true
@@ -11,7 +21,7 @@
       apt_repository:
         repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
 
-    - name: update apt cache
+    - name: apt update
       apt:
         update_cache: yes
 
