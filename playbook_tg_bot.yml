@@ -144,6 +144,16 @@
     pg_dir: "/var/lib/postgresql/12/main"
   tasks:
 
+  
+    - name: change postgresql.conf
+      lineinfile:
+        path: "{{ pg_data_dir }}/postgresql.conf"
+        regexp: '^#?{{ item.regexp }}'
+        line: '{{ item.line }}'
+      loop:
+        - { regexp: "listen_addresses =", line: "listen_addresses = '*'" }
+        - { regexp: "port =", line: "port = {{ hostvars[inventory_hostname]['DB_PORT'] }}" }
+        
     - name: stop postgresql 
       shell: service postgresql stop
     
@@ -156,6 +166,13 @@
       shell:  pg_basebackup -R -h {{ hostvars[inventory_hostname]['DB_HOST'] }} -p {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }} -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} -D /var/lib/postgresql/16/main/ -P
       environment:
         PGPASSWORD: "{{ hostvars[inventory_hostname]['DB_REPL_PASSWORD'] }}"
+
+    - name: change pg_hba.conf
+      blockinfile:
+        path: "{{ pg_data_dir }}/pg_hba.conf"
+        block: |
+          host {{ hostvars[inventory_hostname]['DB_DATABASE'] }} {{ hostvars[inventory_hostname]['DB_USER'] }} 0.0.0.0/0 trust
+          host replication {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} {{ hostvars[inventory_hostname]['DB_REPL_HOST'] }}/24 trust
 
     - name: start postgresql
       shell: service postgresql start
