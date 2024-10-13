@@ -44,7 +44,7 @@
           - postgresql-contrib
         state: present
 
-- name: configure and start db
+- name: configure postgresql 1
   hosts: db
   become: true
   vars:
@@ -90,7 +90,7 @@
         state: restarted
         name: postgresql
     
-- name: configure postgresql
+- name: configure postgresql 2
   hosts: db
   become: true
   become_user: postgres
@@ -144,7 +144,6 @@
 
     - name: stop postgresql 
       shell: service postgresql stop
-
     
     - name: clear postgresql dir
       become_user: postgres
@@ -170,12 +169,11 @@
       apt:							# Устанавливем пакеты через apt
         name:
           - git
+          - python3-paramiko
+          - python3-python-dotenv
+          - python3-pytelegrambotapi
         state: present
         update_cache: yes
-
-    - name: download python requirements 
-      pip:							# Юзаем pip
-        requirements: "{{ bot_dir }}/requirements.txt"		# Откуда брать список бибилиотек
 
     - name: download bot
       git:
@@ -183,6 +181,7 @@
         dest: "{{ bot_dir }}"
         single_branch: yes
         version: tg_bot
+
 
     - name: create .env file
       copy:
