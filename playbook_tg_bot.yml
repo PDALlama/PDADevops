@@ -156,11 +156,10 @@
       shell: service postgresql stop
     
     - name: clear postgresql dir
-      become_user: postgres
+      become_user: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
       shell: rm -rf {{ pg_dir }}/*
 
     - name: try to replicate
-      become_user: postgres
       shell:  pg_basebackup -R -h {{ hostvars[inventory_hostname]['DB_HOST'] }} -p {{ hostvars[inventory_hostname]['DB_REPL_PORT'] }} -U {{ hostvars[inventory_hostname]['DB_REPL_USER'] }} -D {{ pg_dir }}/ -P
       become_user: "{{ hostvars[inventory_hostname]['DB_REPL_USER'] }}"
       environment:
