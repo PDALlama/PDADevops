@@ -110,7 +110,7 @@ def exec_ssh_command(command):
 
 # Каждая функция выполняет соответствующее её названию действие
 def find_email(msg):
-    emails = re.findall(r'\S@{1}\S+\.{1}[A-Za-z]+', msg)
+    emails = re.findall(r'\S+@\S+\.[A-Za-z]+', msg)
     if len(emails) > 0:
         return emails
     else:
