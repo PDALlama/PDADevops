@@ -92,7 +92,6 @@ cmd_list = [
 
 bot = telebot.TeleBot(token)
 
-
 # Функция для подключения к хосту по ssh, отправки ему команды и получения ответа
 
 def exec_ssh_command(command):
